@@ -19,8 +19,6 @@ public class ApiResponse<T> {
     @Builder.Default
     private final Instant timestamp = Instant.now();
 
-    // ── factory helpers ────────────────────────────────────────────
-
     public static <T> ApiResponse<T> ok(T data) {
         return ApiResponse.<T>builder()
                 .success(true)

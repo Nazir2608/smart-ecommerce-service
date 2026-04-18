@@ -21,38 +21,32 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorResponse> handleAuth(AuthException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.of("AUTHENTICATION_FAILED", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.of("AUTHENTICATION_FAILED", ex.getMessage()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.of("INVALID_CREDENTIALS", "Invalid email or password"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.of("INVALID_CREDENTIALS", "Invalid email or password"));
     }
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ErrorResponse> handleDisabled(DisabledException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponse.of("ACCOUNT_DISABLED", "Account is disabled or not yet verified"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.of("ACCOUNT_DISABLED", "Account is disabled or not yet verified"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponse.of("ACCESS_DENIED", "You do not have permission to access this resource"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.of("ACCESS_DENIED", "You do not have permission to access this resource"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -65,14 +59,12 @@ public class GlobalExceptionHandler {
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
                         (a, b) -> a
                 ));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.validation(fieldErrors));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.validation(fieldErrors));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of("INTERNAL_SERVER_ERROR", "An unexpected error occurred"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorResponse.of("INTERNAL_SERVER_ERROR", "An unexpected error occurred"));
     }
 }
