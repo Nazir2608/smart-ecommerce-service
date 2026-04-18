@@ -43,8 +43,6 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:http://localhost:3000}")
     private String allowedOrigins;
 
-    // ── Security Filter Chain ──────────────────────────────────────
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -83,8 +81,6 @@ public class SecurityConfig {
                 .build();
     }
 
-    // ── Beans ──────────────────────────────────────────────────────
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
@@ -99,8 +95,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -119,7 +114,6 @@ public class SecurityConfig {
 
     @Bean
     public AuditorAware<String> auditorAware() {
-        return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .map(auth -> auth.getName());
+        return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication()).map(auth -> auth.getName());
     }
 }
