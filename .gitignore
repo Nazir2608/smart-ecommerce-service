@@ -1,0 +1,46 @@
+# ── Compiled output ───────────────────────────────────────────────
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+
+# ── Environment & secrets ─────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.jks
+
+# ── IDE ───────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+.vscode/
+*.code-workspace
+.classpath
+.project
+.settings/
+
+# ── OS ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Maven ────────────────────────────────────────────────────────
+.mvn/
+mvnw
+mvnw.cmd
+!.mvn/wrapper/maven-wrapper.properties
+
+# ── Logs ─────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Reports ──────────────────────────────────────────────────────
+target/site/
+target/surefire-reports/
+
+# ── Docker volumes ───────────────────────────────────────────────
+docker/volumes/

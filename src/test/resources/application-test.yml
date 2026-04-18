@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false   # H2 uses ddl-auto=create-drop instead
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  mail:
+    host: localhost
+    port: 1025
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+
+app:
+  jwt:
+    secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purposes-only
+    access-token-expiry-ms: 900000
+    refresh-token-expiry-ms: 604800000
+  otp:
+    expiry-minutes: 10
+  cors:
+    allowed-origins: http://localhost:3000
+  oauth2:
+    redirect-uri: http://localhost:3000/oauth2/callback
+
+logging:
+  level:
+    root: WARN
+    com.nazir.ecommerce: INFO

@@ -1,0 +1,131 @@
+version: "3.9"
+
+# ── SmartCommerce Pro — Local Development Stack ───────────────────
+# Usage:
+#   docker compose up -d          — start all services
+#   docker compose up -d postgres redis  — start only infra
+#   docker compose logs -f app    — tail application logs
+
+services:
+
+  # ── Application ─────────────────────────────────────────────────
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sc-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/smartcommerce
+      DB_USER: scuser
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-scpassword}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-this-before-prod-use-256bits}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [ sc-net ]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── PostgreSQL ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: sc-postgres
+    environment:
+      POSTGRES_DB: smartcommerce
+      POSTGRES_USER: scuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scpassword}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks: [ sc-net ]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scuser -d smartcommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: sc-redis
+    command: >
+      redis-server
+      --requirepass "${REDIS_PASSWORD:-}"
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks: [ sc-net ]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Mailhog (SMTP trap for dev) ──────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sc-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI — http://localhost:8025
+    networks: [ sc-net ]
+    restart: unless-stopped
+
+  # ── Redis Commander (GUI) ────────────────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: sc-redis-ui
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-}
+    ports:
+      - "8081:8081"
+    networks: [ sc-net ]
+    depends_on: [ redis ]
+    profiles: [ tools ]   # start with: docker compose --profile tools up -d
+
+  # ── pgAdmin ──────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sc-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@smartcommerce.dev
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    networks: [ sc-net ]
+    depends_on: [ postgres ]
+    profiles: [ tools ]
+
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  sc-net:
+    driver: bridge
+    name: smartcommerce-network

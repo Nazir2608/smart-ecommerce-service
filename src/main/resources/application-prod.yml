@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.nazir.ecommerce: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: >-
+      {"ts":"%d{ISO8601}","level":"%level","service":"smart-ecommerce",
+      "logger":"%logger{36}","msg":"%msg"}%n
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
