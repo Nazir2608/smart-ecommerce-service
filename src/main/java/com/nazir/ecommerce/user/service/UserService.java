@@ -21,8 +21,6 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    // ── Read ───────────────────────────────────────────────────────
-
     @Transactional(readOnly = true)
     public UserResponse getProfile(UserPrincipal principal) {
         User user = findUserById(principal.getUserId());
@@ -34,8 +32,6 @@ public class UserService {
         return findUserById(userId);
     }
 
-    // ── Update ─────────────────────────────────────────────────────
-
     @Transactional
     public UserResponse updateProfile(UserPrincipal principal, UpdateProfileRequest request) {
         User user = findUserById(principal.getUserId());
@@ -44,12 +40,10 @@ public class UserService {
             user.setFullName(request.getFullName());
         }
         if (request.getAvatarUrl() != null) {
-            user.setAvatarUrl(StringUtils.hasText(request.getAvatarUrl())
-                    ? request.getAvatarUrl() : null);
+            user.setAvatarUrl(StringUtils.hasText(request.getAvatarUrl()) ? request.getAvatarUrl() : null);
         }
         if (request.getPhoneNumber() != null) {
-            user.setPhoneNumber(StringUtils.hasText(request.getPhoneNumber())
-                    ? request.getPhoneNumber() : null);
+            user.setPhoneNumber(StringUtils.hasText(request.getPhoneNumber()) ? request.getPhoneNumber() : null);
         }
 
         User saved = userRepository.save(user);
@@ -57,15 +51,11 @@ public class UserService {
         return UserResponse.from(saved);
     }
 
-    // ── Internal helpers ───────────────────────────────────────────
-
     public User findUserById(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 }

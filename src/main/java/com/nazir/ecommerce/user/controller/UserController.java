@@ -25,18 +25,13 @@ public class UserController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current user profile")
-    public ResponseEntity<ApiResponse<UserResponse>> getProfile(
-            @AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.ok(userService.getProfile(principal)));
     }
 
     @PutMapping("/me")
     @Operation(summary = "Update current user profile")
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody UpdateProfileRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(
-                userService.updateProfile(principal, request),
-                "Profile updated successfully"));
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.updateProfile(principal, request), "Profile updated successfully"));
     }
 }

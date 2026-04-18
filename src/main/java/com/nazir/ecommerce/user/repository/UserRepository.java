@@ -14,7 +14,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(String email);
 
-    Optional<User> findByOauthSubjectAndOauthProvider(
-            String oauthSubject,
-            com.nazir.ecommerce.common.enums.OAuthProvider provider);
+    Optional<User> findByOauthSubjectAndOauthProvider(String oauthSubject, com.nazir.ecommerce.common.enums.OAuthProvider provider);
 }

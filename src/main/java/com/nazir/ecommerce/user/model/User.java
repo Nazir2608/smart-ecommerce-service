@@ -32,7 +32,9 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    /** Nullable: OAuth users have no local password. */
+    /**
+     * Nullable: OAuth users have no local password.
+     */
     @Column(name = "password_hash")
     private String passwordHash;
 

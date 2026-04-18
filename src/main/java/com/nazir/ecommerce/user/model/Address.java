@@ -29,7 +29,9 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** Friendly label: HOME, WORK, OTHER */
+    /**
+     * Friendly label: HOME, WORK, OTHER
+     */
     @Column(length = 20)
     @Builder.Default
     private String label = "HOME";

@@ -29,37 +29,26 @@ public class AddressController {
 
     @GetMapping
     @Operation(summary = "List all addresses for current user")
-    public ResponseEntity<ApiResponse<List<AddressResponse>>> listAddresses(
-            @AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<ApiResponse<List<AddressResponse>>> listAddresses(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.ok(addressService.listAddresses(principal)));
     }
 
     @PostMapping
     @Operation(summary = "Add a new delivery address")
-    public ResponseEntity<ApiResponse<AddressResponse>> addAddress(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody AddressRequest request) {
+    public ResponseEntity<ApiResponse<AddressResponse>> addAddress(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody AddressRequest request) {
         AddressResponse address = addressService.addAddress(principal, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(address, "Address added successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(address, "Address added successfully"));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing delivery address")
-    public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable UUID id,
-            @Valid @RequestBody AddressRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(
-                addressService.updateAddress(principal, id, request),
-                "Address updated successfully"));
+    public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(@AuthenticationPrincipal UserPrincipal principal, @PathVariable UUID id, @Valid @RequestBody AddressRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(addressService.updateAddress(principal, id, request), "Address updated successfully"));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a delivery address")
-    public ResponseEntity<ApiResponse<Void>> deleteAddress(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<Void>> deleteAddress(@AuthenticationPrincipal UserPrincipal principal, @PathVariable UUID id) {
         addressService.deleteAddress(principal, id);
         return ResponseEntity.ok(ApiResponse.ok("Address deleted successfully"));
     }

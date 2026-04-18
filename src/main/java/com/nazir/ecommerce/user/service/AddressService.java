@@ -26,8 +26,6 @@ public class AddressService {
     private final AddressRepository addressRepository;
     private final UserService userService;
 
-    // ── Read ───────────────────────────────────────────────────────
-
     @Transactional(readOnly = true)
     public List<AddressResponse> listAddresses(UserPrincipal principal) {
         return addressRepository
@@ -37,24 +35,19 @@ public class AddressService {
                 .toList();
     }
 
-    // ── Create ─────────────────────────────────────────────────────
-
     @Transactional
     public AddressResponse addAddress(UserPrincipal principal, AddressRequest request) {
         UUID userId = principal.getUserId();
 
         int count = addressRepository.countByUserId(userId);
         if (count >= MAX_ADDRESSES_PER_USER) {
-            throw new BusinessException("ADDRESS_LIMIT_EXCEEDED",
-                    "You can have at most " + MAX_ADDRESSES_PER_USER + " saved addresses");
+            throw new BusinessException("ADDRESS_LIMIT_EXCEEDED", "You can have at most " + MAX_ADDRESSES_PER_USER + " saved addresses");
         }
 
-        // If this is marked as default, clear existing default first
         if (request.isDefault()) {
             addressRepository.clearDefaultForUser(userId);
         }
 
-        // First address is always default
         boolean shouldBeDefault = request.isDefault() || count == 0;
 
         User user = userService.findUserById(userId);
@@ -77,11 +70,8 @@ public class AddressService {
         return AddressResponse.from(saved);
     }
 
-    // ── Update ─────────────────────────────────────────────────────
-
     @Transactional
-    public AddressResponse updateAddress(UserPrincipal principal, UUID addressId,
-                                         AddressRequest request) {
+    public AddressResponse updateAddress(UserPrincipal principal, UUID addressId, AddressRequest request) {
         UUID userId = principal.getUserId();
         Address address = findAddressByIdAndUser(addressId, userId);
 
@@ -105,8 +95,6 @@ public class AddressService {
         return AddressResponse.from(saved);
     }
 
-    // ── Delete ─────────────────────────────────────────────────────
-
     @Transactional
     public void deleteAddress(UserPrincipal principal, UUID addressId) {
         UUID userId = principal.getUserId();
@@ -116,7 +104,6 @@ public class AddressService {
         addressRepository.delete(address);
         log.info("Address {} deleted for user {}", addressId, userId);
 
-        // Promote the oldest remaining address to default if the deleted one was default
         if (wasDefault) {
             addressRepository
                     .findByUserIdOrderByIsDefaultDescCreatedAtAsc(userId)
