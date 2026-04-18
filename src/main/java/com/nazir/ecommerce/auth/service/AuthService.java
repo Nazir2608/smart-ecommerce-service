@@ -32,13 +32,13 @@ import java.util.UUID;
 @Slf4j
 public class AuthService {
 
-    private final UserRepository         userRepository;
+    private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordEncoder        passwordEncoder;
-    private final JwtService             jwtService;
-    private final AuthenticationManager  authenticationManager;
-    private final OtpService             otpService;
-    private final EmailService           emailService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
     @Value("${app.jwt.refresh-token-expiry-ms:604800000}") // 7 days
     private long refreshTokenExpiryMs;
@@ -46,15 +46,11 @@ public class AuthService {
     @Value("${app.jwt.access-token-expiry-ms:900000}")     // 15 min
     private long accessTokenExpiryMs;
 
-    // ── Register ───────────────────────────────────────────────────
-
     @Transactional
     public TokenResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("EMAIL_ALREADY_EXISTS",
-                    "An account with this email already exists");
+            throw new BusinessException("EMAIL_ALREADY_EXISTS", "An account with this email already exists");
         }
-
         User user = User.builder()
                 .email(request.getEmail().toLowerCase().strip())
                 .fullName(request.getFullName().strip())
@@ -72,45 +68,29 @@ public class AuthService {
         return issueTokenPair(saved);
     }
 
-    // ── Login ──────────────────────────────────────────────────────
-
     @Transactional
     public TokenResponse login(LoginRequest request, HttpServletRequest httpRequest) {
-        // Delegates to DaoAuthenticationProvider → CustomUserDetailsService
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail().toLowerCase().strip(),
-                        request.getPassword())
-        );
+        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail().toLowerCase().strip(), request.getPassword()));
 
         UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
-        User user = userRepository.findById(principal.getUserId())
-                .orElseThrow(() -> new AuthException("User not found"));
+        User user = userRepository.findById(principal.getUserId()).orElseThrow(() -> new AuthException("User not found"));
 
-        TokenResponse tokens = issueTokenPair(
-                user,
-                httpRequest.getHeader("User-Agent"),
-                httpRequest.getRemoteAddr());
+        TokenResponse tokens = issueTokenPair(user, httpRequest.getHeader("User-Agent"), httpRequest.getRemoteAddr());
 
         log.info("User logged in: {}", user.getEmail());
         return tokens;
     }
 
-    // ── Refresh ────────────────────────────────────────────────────
-
     @Transactional
     public TokenResponse refresh(RefreshTokenRequest request) {
-        RefreshToken stored = refreshTokenRepository
-                .findByToken(request.getRefreshToken())
+        RefreshToken stored = refreshTokenRepository.findByToken(request.getRefreshToken())
                 .orElseThrow(() -> new AuthException("Invalid refresh token"));
 
         if (!stored.isValid()) {
-            // Potential token reuse — revoke all tokens for this user
             refreshTokenRepository.revokeAllByUserId(stored.getUser().getId());
             throw new AuthException("Refresh token is expired or revoked");
         }
 
-        // Rotate: revoke old, issue new
         stored.setRevoked(true);
         refreshTokenRepository.save(stored);
 
@@ -119,8 +99,6 @@ public class AuthService {
         log.debug("Tokens rotated for user {}", user.getEmail());
         return tokens;
     }
-
-    // ── Logout ─────────────────────────────────────────────────────
 
     @Transactional
     public void logout(String rawRefreshToken) {
@@ -132,12 +110,9 @@ public class AuthService {
                 });
     }
 
-    // ── Forgot password ────────────────────────────────────────────
-
     public void forgotPassword(ForgotPasswordRequest request) {
         String email = request.getEmail().toLowerCase().strip();
 
-        // Always respond OK to prevent user enumeration
         userRepository.findByEmail(email).ifPresent(user -> {
             if (user.getOauthProvider() != OAuthProvider.LOCAL) {
                 log.warn("Password reset attempted on OAuth account: {}", email);
@@ -149,16 +124,13 @@ public class AuthService {
         });
     }
 
-    // ── Reset password ─────────────────────────────────────────────
-
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         String email = request.getEmail().toLowerCase().strip();
 
         otpService.verifyAndConsume(email, request.getOtp());
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException("No account found for this email"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AuthException("No account found for this email"));
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
@@ -168,15 +140,14 @@ public class AuthService {
         log.info("Password reset for {}. {} sessions revoked.", email, revoked);
     }
 
-    // ── Token pair factory (public for OAuth2 handler) ─────────────
-
+    // Token pair factory (public for OAuth2 handler)
     public TokenResponse issueTokenPair(User user) {
         return issueTokenPair(user, null, null);
     }
 
     public TokenResponse issueTokenPair(User user, String userAgent, String ipAddress) {
         UserPrincipal principal = UserPrincipal.of(user);
-        String accessToken  = jwtService.generateAccessToken(principal);
+        String accessToken = jwtService.generateAccessToken(principal);
         String refreshToken = createAndPersistRefreshToken(user, userAgent, ipAddress);
 
         return TokenResponse.builder()
@@ -186,17 +157,15 @@ public class AuthService {
                 .build();
     }
 
-    // ── Scheduled cleanup ──────────────────────────────────────────
-
-    /** Purge expired refresh tokens nightly at 02:00. */
+    /**
+     * Purge expired refresh tokens nightly at 02:00.
+     */
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void purgeExpiredTokens() {
         int deleted = refreshTokenRepository.deleteExpiredTokens();
         log.info("Purged {} expired refresh tokens", deleted);
     }
-
-    // ── Internals ──────────────────────────────────────────────────
 
     private String createAndPersistRefreshToken(User user, String userAgent, String ipAddress) {
         String tokenValue = UUID.randomUUID().toString();

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens", indexes = {
-        @Index(name = "idx_refresh_tokens_token",   columnList = "token",   unique = true),
+        @Index(name = "idx_refresh_tokens_token", columnList = "token", unique = true),
         @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
 })
 @EntityListeners(AuditingEntityListener.class)
@@ -26,7 +26,9 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    /** Opaque UUID token sent to client. */
+    /**
+     * Opaque UUID token sent to client.
+     */
     @Column(nullable = false, unique = true, length = 36)
     private String token;
 
@@ -41,7 +43,9 @@ public class RefreshToken {
     @Builder.Default
     private boolean revoked = false;
 
-    /** Client metadata for session listings */
+    /**
+     * Client metadata for session listings
+     */
     @Column(name = "user_agent", length = 512)
     private String userAgent;
 

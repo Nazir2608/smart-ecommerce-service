@@ -13,6 +13,8 @@ public class TokenResponse {
     @Builder.Default
     private final String tokenType = "Bearer";
 
-    /** Access token expiry in seconds (default 900 = 15 min). */
+    /**
+     * Access token expiry in seconds (default 900 = 15 min).
+     */
     private final long expiresIn;
 }
