@@ -24,8 +24,6 @@ public class EmailService {
     @Value("${app.name:SmartCommerce Pro}")
     private String appName;
 
-    // ── OTP / Password Reset ───────────────────────────────────────
-
     @Async
     public void sendOtpEmail(String toEmail, String otp) {
         String subject = appName + " — Password Reset OTP";
@@ -45,8 +43,6 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, body);
     }
 
-    // ── Welcome / Email verification ───────────────────────────────
-
     @Async
     public void sendWelcomeEmail(String toEmail, String fullName) {
         String subject = "Welcome to " + appName + "!";
@@ -64,8 +60,6 @@ public class EmailService {
                 """.formatted(fullName, appName, appName);
         sendHtmlEmail(toEmail, subject, body);
     }
-
-    // ── Core send helper ───────────────────────────────────────────
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
         try {

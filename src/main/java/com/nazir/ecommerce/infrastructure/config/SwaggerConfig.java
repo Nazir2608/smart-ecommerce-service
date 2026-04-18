@@ -35,7 +35,7 @@ public class SwaggerConfig {
                         .license(new License().name("MIT")))
                 .servers(List.of(
                         new Server().url("http://localhost:" + serverPort)
-                                    .description("Local development")))
+                                .description("Local development")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName, new SecurityScheme()

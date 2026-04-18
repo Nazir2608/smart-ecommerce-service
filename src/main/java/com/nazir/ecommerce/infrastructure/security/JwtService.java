@@ -27,8 +27,6 @@ public class JwtService {
     @Value("${app.jwt.access-token-expiry-ms:900000}")     // 15 min
     private long accessTokenExpiryMs;
 
-    // ── Token generation ──────────────────────────────────────────
-
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         if (userDetails instanceof UserPrincipal principal) {
@@ -49,8 +47,6 @@ public class JwtService {
                 .compact();
     }
 
-    // ── Token validation ──────────────────────────────────────────
-
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
@@ -64,8 +60,6 @@ public class JwtService {
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
-    // ── Claims extraction ─────────────────────────────────────────
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

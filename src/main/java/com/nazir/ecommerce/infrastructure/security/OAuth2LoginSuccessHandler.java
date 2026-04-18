@@ -32,24 +32,20 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private String redirectUri;
 
     @Override
-    public void onAuthenticationSuccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication) throws IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         String registrationId = oauthToken.getAuthorizedClientRegistrationId();
 
         String email = oAuth2User.getAttribute("email");
-        String name  = oAuth2User.getAttribute("name");
+        String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
         String oauthSubject = oAuth2User.getName(); // provider-unique subject ID
 
         if (email == null) {
             log.error("OAuth2 user has no email attribute from provider: {}", registrationId);
-            getRedirectStrategy().sendRedirect(request, response,
-                    redirectUri + "?error=email_required");
+            getRedirectStrategy().sendRedirect(request, response, redirectUri + "?error=email_required");
             return;
         }
 
