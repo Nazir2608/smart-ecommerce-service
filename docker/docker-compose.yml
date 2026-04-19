@@ -1,14 +1,6 @@
-version: "3.9"
-
 # ── SmartCommerce Pro — Local Development Stack ───────────────────
-# Usage:
-#   docker compose up -d          — start all services
-#   docker compose up -d postgres redis  — start only infra
-#   docker compose logs -f app    — tail application logs
-
 services:
 
-  # ── Application ─────────────────────────────────────────────────
   app:
     build:
       context: ..
@@ -18,14 +10,15 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:postgresql://postgres:5432/smartcommerce
-      DB_USER: scuser
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-scpassword}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      MAIL_HOST: mailhog
-      MAIL_PORT: 1025
+      # Spring Boot canonical names — read directly without any ${} in application.yml
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartcommerce
+      SPRING_DATASOURCE_USERNAME: scuser
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-scpassword}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-this-before-prod-use-256bits}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
@@ -39,13 +32,12 @@ services:
     networks: [ sc-net ]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health | grep -q UP || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
-  # ── PostgreSQL ───────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: sc-postgres
@@ -65,40 +57,39 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Redis ────────────────────────────────────────────────────────
   redis:
     image: redis:7.2-alpine
+    platform: linux/arm64
     container_name: sc-redis
     command: >
       redis-server
       --requirepass "${REDIS_PASSWORD:-}"
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
+      --save ""
+      --appendonly no
     ports:
       - "6379:6379"
     networks: [ sc-net ]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "--no-auth-warning", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
 
-  # ── Mailhog (SMTP trap for dev) ──────────────────────────────────
   mailhog:
-    image: mailhog/mailhog:latest
+    image: axllent/mailpit:latest
     container_name: sc-mailhog
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI — http://localhost:8025
+      - "1025:1025"
+      - "8025:8025"
     networks: [ sc-net ]
     restart: unless-stopped
 
-  # ── Redis Commander (GUI) ────────────────────────────────────────
   redis-commander:
     image: rediscommander/redis-commander:latest
+    platform: linux/amd64
     container_name: sc-redis-ui
     environment:
       REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-}
@@ -106,9 +97,8 @@ services:
       - "8081:8081"
     networks: [ sc-net ]
     depends_on: [ redis ]
-    profiles: [ tools ]   # start with: docker compose --profile tools up -d
+    profiles: [ tools ]
 
-  # ── pgAdmin ──────────────────────────────────────────────────────
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: sc-pgadmin
@@ -123,7 +113,6 @@ services:
 
 volumes:
   pg_data:
-  redis_data:
 
 networks:
   sc-net:

@@ -5,11 +5,17 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
-  # ── Datasource ──────────────────────────────────────────────────
+  threads:
+    virtual:
+      enabled: true
+
+  # ── Datasource ───────────────────────────────────────────────────
+  # Uses Spring Boot canonical env var SPRING_DATASOURCE_URL when set by Docker,
+  # falls back to localhost for local IDE development.
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/smartcommerce}
-    username: ${DB_USER:scuser}
-    password: ${DB_PASSWORD:scpassword}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/smartcommerce}
+    username: ${SPRING_DATASOURCE_USERNAME:scuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:scpassword}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -19,7 +25,7 @@ spring:
       max-lifetime: 1800000
       pool-name: SmartCommerceHikariCP
 
-  # ── JPA / Hibernate ─────────────────────────────────────────────
+  # ── JPA / Hibernate ──────────────────────────────────────────────
   jpa:
     hibernate:
       ddl-auto: validate
@@ -35,7 +41,7 @@ spring:
         order_inserts: true
         order_updates: true
 
-  # ── Flyway ──────────────────────────────────────────────────────
+  # ── Flyway ───────────────────────────────────────────────────────
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -46,9 +52,9 @@ spring:
   # ── Redis ────────────────────────────────────────────────────────
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
       timeout: 3000ms
       lettuce:
         pool:
@@ -59,10 +65,10 @@ spring:
 
   # ── Mail ─────────────────────────────────────────────────────────
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -72,7 +78,7 @@ spring:
             required: true
         debug: false
 
-  # ── OAuth2 ──────────────────────────────────────────────────────
+  # ── OAuth2 ───────────────────────────────────────────────────────
   security:
     oauth2:
       client:
@@ -91,9 +97,12 @@ spring:
               - user:email
               - read:user
 
-# ── Server ────────────────────────────────────────────────────────
+# ── Server ───────────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    threads:
+      max: 200
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/plain
@@ -103,7 +112,7 @@ server:
   servlet:
     context-path: /
 
-# ── Actuator ──────────────────────────────────────────────────────
+# ── Actuator ─────────────────────────────────────────────────────
 management:
   endpoints:
     web:
@@ -120,7 +129,7 @@ management:
     env:
       enabled: true
 
-# ── SpringDoc / Swagger ───────────────────────────────────────────
+# ── SpringDoc / Swagger ──────────────────────────────────────────
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -132,14 +141,14 @@ springdoc:
     disable-swagger-default-url: true
   show-actuator: false
 
-# ── Application custom properties ─────────────────────────────────
+# ── Application custom properties ────────────────────────────────
 app:
   name: SmartCommerce Pro
 
   jwt:
     secret: ${JWT_SECRET:change-this-to-a-256-bit-secret-in-production-never-use-default}
-    access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}      # 15 min
-    refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000} # 7 days
+    access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}
+    refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}
 
   otp:
     expiry-minutes: ${OTP_EXPIRY_MINUTES:10}
@@ -159,7 +168,7 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
   pattern:
-    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%xwEx"
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
 
 info:
   app:
